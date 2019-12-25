@@ -1,0 +1,171 @@
+一 用户与组
+创建组，并指定用户进组
+	groupadd wudang
+	useradd -g wudang zhangwuji
+	id zhangwuji
+把用户移动到其他组
+	groupadd shaolin
+	usermod -g shaolin zhangwuji
+	zhangwuji
+与组相关的三个配置文件
+	/etc/passwd (可以查看有多少用户) 
+ 	/etc/group 
+ 	/etc/shadow
+———chown 
+	chown mxf test.txt 
+	(把text文件的所有者改成mxf，加－R即递归）
+———chgrp	
+	chgrp -R mxf /usr/local
+	(把／usr/local下所有文件的用户组都改成 mxf)
+———chmod	chmod 755 file1
+	chmod u+x，g-w，o+rx file
+	chmod u=rwx,g=r,0=r file
+
+————usermod
+	usermod -g shaolin zhangwuji
+	(把zhangwuji移到shaolin组)
+
+———-id查看用户信息
+	id moxiaofang
+
+如何找回root密码
+	开机－－引导时输入 回车－－输入e—－选择kernel－－再输入e－－输入1-－－回车－－b－—进入单用户模	式－－passwd修改root密码
+
+二 cp 拷贝
+	cp -r 原文件  目标文件（－r 提示是否覆盖）
+	\cp -r xxx xxx (强制覆盖)
+
+三 ln 链接
+	ln -s /root linktoroot 
+	(-s代表软连接 ／root链接到root下面  linktoroot即软连接的名字)
+	rm -rf linktoroot 
+	(当cd到linktoroot时 ls到的是root里面的内容，但是pwd时，还是在linktoroot里面)
+四 时间
+	date
+	date "+%Y %m %d" （只显示年月日）
+	cal 查看日历
+五 查找文件
+	find /home -name test.txt (查找home目录下 name为test.txt的文件)
+	find /home/ -user moxiaofang （home目录下使用者为mxf的文件）
+	find  / -size +100M （根目录下大小大于100m的文件）
+	updatedb 然后 locate
+	locate /etc/sh (查找etc下以sh开头的文件）
+
+六 压缩与解压
+      gz文件       zip文件        bzip2文件          tar文件
+压缩：gzip xxx                   bzip2 -z xxx      tar -jcvf xx.tar.bz2  要被压缩的文件
+解压：gunzip xxx    unzip xxx    bzip2 -d xxx      tar -jxvf xx.tar.bz2 -C 想解压到的地方
+						    （ j对应bz2, z对应gzip）	
+vim快捷键
+	：％d删除所有
+	0 跳至行首
+	$ 跳至行尾
+	G 跳到最后一行
+	gg＝1G 跳到第一行
+	y 复制  20y向下复制20列
+	p 粘贴
+	u 复原
+	10x  连续删除10个字符
+	20d 向下删除20列
+	dG  删除光标到最后一行的所有数据  
+	2dG  删除第二行到光标这行的数据
+	:set nu  设置行号
+	ctr+r  重做上一个动作
+
+七 定时任务crontab
+	crontab -e command 
+	(-e编辑任务 -l列出任务 -r删除任务)
+
+	minute   hour     day    month    week   command 
+	（0-59） （0-23） （1-31） （1-12） （0-7，0和7代表星期天）
+   
+	＊代表所有可能的值 （如果在minute字段有＊就代表每分钟都要执行）
+	，表示列表范围（3，15 即第3和第15min）
+	／代表时间间隔频率 （＊／10 在minute字段就是每隔10分钟）
+	－表示整数范围 (什么时候到什么时候)
+例子－－－
+	每隔两天的上午8点到11点的第3和第15分钟执行
+	3,15 8-11 */2 * * command
+
+	每天18 : 00至23 : 00之间每隔30分钟重启smb 
+	0，30 18-23 ＊ ＊ ＊ ／etc/init.d/smb restart
+
+	晚上11点到早上7点之间，每隔一小时重启smb
+	＊ 23-7/1 ＊ ＊ ＊ ／etc/init.d/smb restart
+
+	每月1号和15号检查/home 磁盘 
+	0 0 1,15 * * fsck /home 
+步骤：－－－
+	先编写脚本如：vim  /home/mytask1.sh
+	给mytask1.sh加x权限 chmod 744 /home/mytask1.sh
+	加入任务列表：crontab -e    */1 * * * * /home/mytask1.sh
+
+八 磁盘挂载与分区
+	挂载即把硬盘和linux的文件系统联系起来
+	Linux硬盘分IDE硬盘和SCSI硬盘 驱动器标识符“hdx”或”sdx“
+－－－查看当前系统分区情况和挂载情况
+	 lsblk －f	
+-－－添加一块硬盘：
+	1虚拟机添加硬盘名为sdb1
+	2分区 fdisk /dev/sdb 
+	   — —m－－n— —p—w w即写入，如果不想增加，则步要按w
+	3格式化
+	  mkfs -t ext4 /dev/sdb1（把sdb1格式化为ext4类型）
+	4挂载
+	  mkdir /home/newdisk
+	  mount /dev/sdb1 /home/newdisk
+	5设置自动挂载
+	  vim /etc/fstab
+    	  写入 /dev/sdb1          /home/newdisk       ext4   0 0
+	  mount －a 自动挂载
+－－－卸载
+	umount  /dev/sdb1  或者 umount /newdisk
+
+九 磁盘情况查询
+	系统磁盘整体情况
+	  df -h
+	指定目录的磁盘占用情况
+	  du -h
+	统计／home/moxiaofang目录下有多少个目录
+	ls -l /home/moxiaofang/ |grep "^d"|wc -l  
+	（grep “-“ 统计文件，ls -lR则把子文件夹里的也一并统计）
+
+十 进程管理
+－－－查看进程
+	ps -aux |grep sshd
+USER        PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root          1  0.0  0.2 136484  2844 ?        Ss   Nov13   0:34 /usr/lib/systemd/
+ 用户名 进程号 占用的cpu 占用内存 使用的虚拟内存 使用物理内存的情况 使用的终端 进程状态 启动时间 占用总cpu时间 进程执行时命令行
+	ps -ef 可以查看父进程
+
+－－－杀死进程
+	kill -9 pid (强制杀死)
+	killall gedit （杀死多个gedit终端）
+
+
+
+
+
+
+
+
+	
+ ＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＊＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃
+
+查看8081端口是否被占用
+	lsof -i:8081 
+	yum install lsof
+
+scp 服务器之间传输文件
+	scp cuc.war root@10.20.0.225:/root
+	在当前目录下把cuc.tar 传输到225服务器的／root目录下
+
+centos 7 防火墙
+	启动： systemctl start firewalld
+	关闭： systemctl stop firewalld
+	查看状态： systemctl status firewalld
+	开机禁用 ： systemctl disable firewalld
+	开机启用 ： systemctl enable firewalld
+
+查看tomcat下面的日志
+ 	tail -300 ／logs／catalina.out
